@@ -3,7 +3,10 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 
 def load_image_safe(path, w, h):
-    """EAFP Image loading to prevent system-level crashes on missing assets."""
+    """
+    EAFP Image loading to prevent system-level crashes on missing assets.
+    Returns an empty Gtk.Image if the file is missing or corrupted.
+    """
     try:
         pb = GdkPixbuf.Pixbuf.new_from_file_at_size(path, w, h)
         return Gtk.Image.new_from_pixbuf(pb)
@@ -11,14 +14,18 @@ def load_image_safe(path, w, h):
         return Gtk.Image()
 
 def GUI(self, Gtk, GdkPixbuf, fn):
-    # Main Container
+    # Main Container using CSS class for 3lectric-Glass styling
     self.vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
     self.vbox.get_style_context().add_class("main-container")
     self.add(self.vbox)
 
     # 1. ──────────────── STATUS NOTIFICATION HUD ────────────────
+    # High-intensity overlay for system status updates
     self.notification_revealer = Gtk.Revealer()
     self.notification_label = Gtk.Label()
+    # Map the CSS rule for neon white text
+    self.notification_label.get_style_context().add_class("notification-label")
+    
     panel = load_image_safe(fn.os.path.join(fn.base_dir, 'images/panel.png'), 700, 40)
     overlay = Gtk.Overlay()
     overlay.add(panel)
@@ -27,11 +34,13 @@ def GUI(self, Gtk, GdkPixbuf, fn):
     self.vbox.pack_start(self.notification_revealer, False, False, 0)
 
     # 2. ──────────────── LOGO & WARNING MATRIX ────────────────
+    # Visual branding and high-risk operation warnings
     logo_hbox = Gtk.Box(spacing=20)
     logo_path = fn.os.path.join(fn.base_dir, 'images/4ndr0trasher-logo.png')
     logo_hbox.pack_start(load_image_safe(logo_path, 180, 180), False, False, 10)
 
     lblmessage = Gtk.Label()
+    # Red warning text utilizing the JetBrains Mono font matrix
     lblmessage.set_markup(f'<span foreground="#ff0055" font_desc="JetBrains Mono Bold 14">{fn.message}</span>')
     lblmessage.set_line_wrap(True)
     lblmessage.set_max_width_chars(40)
@@ -39,6 +48,7 @@ def GUI(self, Gtk, GdkPixbuf, fn):
     self.vbox.pack_start(logo_hbox, False, False, 5)
 
     # 3. ──────────────── CONFIGURATION GLASS PANEL ────────────────
+    # Grouped configuration toggles using the glass-panel CSS class
     config_panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
     config_panel.get_style_context().add_class("glass-panel")
     config_panel.set_margin_start(10)
@@ -56,27 +66,29 @@ def GUI(self, Gtk, GdkPixbuf, fn):
         row.pack_end(sw, False, False, 0)
         return row, sw
 
-    # Backup Toggle
+    # Backup Toggle: Essential for crash resilience and recovery
     row_bk, self.backup_switch = create_toggle_row("SYSTEM SNAPSHOT / BACKUP")
     config_panel.pack_start(row_bk, False, False, 5)
 
-    # Surgical Toggle (Connected to Backup)
+    # Surgical Toggle: Omits heavy caches to prevent backup hangs
     row_sg, self.surgical_switch = create_toggle_row("SURGICAL MODE (OMIT HEAVY CACHE)")
+    # Functional dependency: Surgical mode requires backup enablement
     self.backup_switch.connect("notify::active", lambda s, p: self.surgical_switch.set_sensitive(s.get_active()))
     config_panel.pack_start(row_sg, False, False, 5)
 
-    # Config Protection
+    # Config Protection: Determines if ~/.config is purged
     row_pt, self.donottouch = create_toggle_row("PROTECT CURRENT ~/.CONFIG")
     config_panel.pack_start(row_pt, False, False, 5)
 
     self.vbox.pack_start(config_panel, False, False, 10)
 
     # 4. ──────────────── PURGE INTERFACE ────────────────
+    # Core operational matrix for desktop deconstruction
     action_matrix = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
     action_matrix.set_margin_start(10)
     action_matrix.set_margin_end(10)
 
-    # Option 1: Detected Sessions
+    # Option 1: Purge Detected Sessions (XSessions/Wayland-Sessions)
     row_inst = Gtk.Box(spacing=10)
     row_inst.pack_start(Gtk.Label(label="PURGE DETECTED MATRIX:"), False, False, 0)
     self.installed_sessions = Gtk.ComboBoxText()
@@ -85,12 +97,13 @@ def GUI(self, Gtk, GdkPixbuf, fn):
     row_inst.pack_start(self.installed_sessions, True, True, 0)
     
     btn_inst = Gtk.Button(label="EXECUTE")
+    # Apply destructive class for neon red hazard visual
     btn_inst.get_style_context().add_class("destructive")
     btn_inst.connect('clicked', self.on_remove_clicked_installed)
     row_inst.pack_end(btn_inst, False, False, 0)
     action_matrix.pack_start(row_inst, False, False, 0)
 
-    # Option 2: Global Registry
+    # Option 2: Global Registry (Master List Removal)
     row_glob = Gtk.Box(spacing=10)
     row_glob.pack_start(Gtk.Label(label="PURGE GLOBAL REGISTRY:"), False, False, 0)
     self.desktopr = Gtk.ComboBoxText()
@@ -107,6 +120,7 @@ def GUI(self, Gtk, GdkPixbuf, fn):
     self.vbox.pack_start(action_matrix, False, False, 10)
 
     # 5. ──────────────── FOOTER CONTROLS ────────────────
+    # System control and session lifecycle management
     footer = Gtk.Box(spacing=10)
     footer.set_margin_top(10)
     
