@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1.0/policyconfig.dtd">
+<policyconfig>
+  <vendor>4ndr0666os</vendor>
+  <vendor_url>https://github.com/4ndr0666os/</vendor_url>
+  <icon_name>4ndr0trasher</icon_name>
+  <action id="org.4ndr0666os.pkexec.4ndr0trasher">
+    <description>4ndr0trasher Elevation</description>
+    <message>Authentication is required to purge your system environments</message>
+    <defaults>
+      <allow_any>auth_admin_keep</allow_any>
+      <allow_inactive>auth_self</allow_inactive>
+      <allow_active>auth_self</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/share/4ndr0trasher/4ndr0trasher.py</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

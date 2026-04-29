@@ -1,0 +1,281 @@
+import os
+import sys
+import traceback
+import subprocess
+import shutil
+import datetime
+import pwd
+from subprocess import PIPE, STDOUT
+from pathlib import Path
+
+# [COHESION MANDATE]: Enforce GI version BEFORE repository import
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk, Gdk, GdkPixbuf, Pango, GLib
+
+base_dir = os.path.dirname(os.path.realpath(__file__))
+
+# =====================================================
+#             Hardened Original User Detection
+# =====================================================
+
+def get_real_user():
+    """Identifies the non-root user even when running under sudo."""
+    pkexec_uid = os.environ.get("PKEXEC_UID")
+    if pkexec_uid:
+        try:
+            return pwd.getpwuid(int(pkexec_uid)).pw_name
+        except (KeyError, ValueError):
+            pass
+
+    sudo_user = os.environ.get("SUDO_USER")
+    if sudo_user:
+        return sudo_user
+
+    try:
+        return os.getlogin()
+    except OSError:
+        pass
+
+    try:
+        return subprocess.check_output(
+            ["logname"], stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        pass
+
+    home_env = os.environ.get("HOME", "")
+    if home_env.startswith("/home/"):
+        parts = home_env.split("/")
+        if len(parts) >= 3:
+            return parts[2]
+
+    raise RuntimeError("get_real_user: Failed to determine identity.")
+
+sudo_username = get_real_user()
+home = "/home/" + str(sudo_username)
+message = (
+    "4ndr0trasher: Provided without guarantees. "
+    "Desktops will be purged. Make backups."
+)
+
+# =====================================================
+#             Surgical Omission Matrix
+# =====================================================
+
+OMIT_LIST = [
+    "BraveSoftware", "google-chrome", "microsoft-edge", "mozilla",
+    "discord", "Signal", "cache", "Cache", "chromium",
+    "SingletonCookie", "SingletonLock", ".cache",
+]
+
+# =====================================================
+#                Logging & Path Checks
+# =====================================================
+
+log_dir     = "/var/log/4ndr0trasher/"
+adt_log_dir = "/var/log/4ndr0trasher/logs/"
+
+def create_log(self):
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d-%H-%M-%S")
+    destination = adt_log_dir + "trasher-log-" + timestamp
+    try:
+        result = subprocess.run(
+            ["sudo", "pacman", "-Q"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        with open(destination, "w", encoding="utf-8") as fh:
+            fh.write(result.stdout)
+    except Exception:
+        print(traceback.format_exc())
+    GLib.idle_add(show_in_app_notification, self, "System state logged.")
+
+def path_check(path):
+    return os.path.isdir(path)
+
+def MessageBox(self, title, message):
+    md2 = Gtk.MessageDialog(
+        parent=self,
+        flags=0,
+        message_type=Gtk.MessageType.INFO,
+        buttons=Gtk.ButtonsType.OK,
+        text=title,
+    )
+    md2.format_secondary_markup(message)
+    md2.run()
+    md2.destroy()
+
+def show_in_app_notification(self, message):
+    if self.timeout_id is not None:
+        GLib.source_remove(self.timeout_id)
+        self.timeout_id = None
+
+    self.notification_label.set_markup(
+        '<span foreground="white">' + message + "</span>"
+    )
+    self.notification_revealer.set_reveal_child(True)
+    self.timeout_id = GLib.timeout_add(3000, timeOut, self)
+
+def timeOut(self):
+    close_in_app_notification(self)
+    return False
+
+def close_in_app_notification(self):
+    self.notification_revealer.set_reveal_child(False)
+    if self.timeout_id is not None:
+        GLib.source_remove(self.timeout_id)
+        self.timeout_id = None
+
+def pop_box(self, combo):
+    coms = []
+    combo.get_model().clear()
+    for session_dir in ("/usr/share/xsessions/", "/usr/share/wayland-sessions/"):
+        if os.path.exists(session_dir):
+            for item in os.listdir(session_dir):
+                coms.append(item.split(".")[0].lower())
+    coms.sort()
+    excludes = {"gnome-classic", "gnome-xorg", "i3-with-shmlog", "openbox-kde", "cinnamon2d", ""}
+    for entry in coms:
+        if entry not in excludes:
+            combo.append_text(entry)
+
+def pop_box_all(self, combo):
+    combo.get_model().clear()
+    for entry in desktop:
+        combo.append_text(entry)
+
+def permissions(dst):
+    try:
+        user_info = pwd.getpwnam(sudo_username)
+        uid, gid = user_info.pw_uid, user_info.pw_gid
+        os.chown(dst, uid, gid)
+        for root, dirs, files in os.walk(dst):
+            for node in dirs + files:
+                full = os.path.join(root, node)
+                try:
+                    os.chown(full, uid, gid)
+                except OSError:
+                    pass
+    except Exception as e:
+        print(f"Permission error: {e}")
+
+def make_backups(enabled=True, surgical=True):
+    if not enabled:
+        return
+    backup_root = home + "/.config-4ndr0trasher"
+    if not os.path.exists(backup_root):
+        os.makedirs(backup_root, exist_ok=True)
+    permissions(backup_root)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
+    targets = [
+        (".config", home + "/.config/",  backup_root + "/config-" + timestamp),
+        (".local",  home + "/.local/",   backup_root + "/local-"  + timestamp),
+    ]
+    def surgical_filter(path, names):
+        return [name for name in names if any(omit in name for omit in OMIT_LIST)]
+    for label, src, dst in targets:
+        if os.path.exists(src):
+            try:
+                shutil.copytree(
+                    src, dst, symlinks=True,
+                    ignore=surgical_filter if surgical else None,
+                    dirs_exist_ok=True
+                )
+                permissions(dst)
+            except Exception:
+                print(traceback.format_exc())
+
+def remove_content_folders():
+    subprocess.run(["rm", "-rf", home + "/.config/"], check=False)
+
+def copy_skel():
+    shutil.copytree("/etc/skel/", home + "/", dirs_exist_ok=True)
+    permissions(home + "/")
+
+def shutdown():
+    subprocess.call(["sudo", "systemctl", "reboot"])
+
+def restart_program():
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+# =====================================================
+#                CONTENT OF DESKTOPS
+# =====================================================
+
+desktop = [
+    "awesome", "berry", "bspwm", "budgie-desktop", "cinnamon", "chadwm",
+    "cutefish-xsession", "cwm", "deepin", "dk", "dusk", "dwm",
+    "enlightenment", "fvwm3", "gnome", "herbstluftwm", "hypr", "hyprland",
+    "i3", "icewm", "jwm", "leftwm", "lxqt", "mate", "nimdow", "niri",
+    "openbox", "pantheon", "plasma", "qtile", "spectrwm", "wayfire",
+    "wmderland", "worm", "ukui", "xfce", "xmonad",
+]
+
+awesome      = ["arcolinux-awesome-git", "arcolinux-rofi-git", "awesome", "rofi", "picom"]
+berry        = ["arcolinux-berry-git", "berry-dev-git"]
+bspwm        = ["arcolinux-bspwm-git", "bspwm", "sutils-git", "xtitle-git"]
+budgie       = ["arcolinux-budgie-git", "budgie-desktop", "budgie-extras"]
+chadwm       = ["arcolinux-chadwm-git"]
+cinnamon     = ["arcolinux-cinnamon-git", "cinnamon", "nemo-fileroller"]
+cutefish     = ["arcolinux-cutefish-git", "cutefish"]
+cwm          = ["arcolinux-cwm-git", "cwm", "picom"]
+deepin       = ["arcolinux-deepin-git", "deepin", "deepin-extra"]
+dk           = ["arcolinux-dk-git", "dk"]
+dusk         = ["arcolinux-dusk-git", "picom"]
+dwm          = ["arcolinux-dwm-git", "picom", "rofi"]
+enlightenment= ["enlightenment"]
+fvwm3        = ["arcolinux-fvwm3-git", "fvwm3-git", "picom"]
+gnome        = ["arcolinux-gnome-git", "gnome-extra"]
+hlwm         = ["arcolinux-herbstluftwm-git", "herbstluftwm", "rofi"]
+hypr         = ["arcolinux-hypr-git", "hypr-dev-git"]
+hyprland     = ["arcolinux-hyprland-git", "hyprland-git", "uwsm"]
+i3           = ["arcolinux-i3wm-git", "i3-wm", "rofi"]
+icewm        = ["arcolinux-icewm-git", "icewm", "picom"]
+jwm          = ["arcolinux-jwm-git", "jwm", "picom"]
+leftwm       = ["arcolinux-leftwm-git", "leftwm", "leftwm-git"]
+lxqt         = ["arcolinux-lxqt-git", "lxqt"]
+mate         = ["arcolinux-mate-git", "mate-extra", "mate"]
+nimdow       = ["arcolinux-nimdow-git", "nimdow-bin"]
+niri         = ["arcolinux-niri-git", "niri"]
+openbox      = ["arcolinux-openbox-git", "openbox", "obmenu-generator"]
+pantheon     = ["pantheon"]
+plasma       = ["arcolinux-plasma-git", "plasma", "kde-applications-meta"]
+qtile        = ["arcolinux-qtile-git", "qtile"]
+spectrwm     = ["arcolinux-spectrwm-git", "spectrwm"]
+ukui         = ["arcolinux-ukui-git", "ukui"]
+wayfire      = ["arcolinux-wayfire-git", "wayfire-git", "wcm-git"]
+wmderland    = ["arcolinux-wmderland-git", "wmderland-git"]
+worm         = ["arcolinux-worm-git", "worm-dev-git"]
+xfce         = ["xfce4", "xfce4-goodies"]
+xmonad       = ["xmonad", "xmonad-contrib"]
+
+_CRITICAL_EXTRAS = {
+    "budgie-desktop": ["gnome", "gnome-desktop", "gnome-online-accounts"],
+    "gnome": ["gnome", "gnome-desktop", "gnome-online-accounts"],
+    "deepin": ["deepin", "deepin-clutter"],
+}
+
+_DESKTOP_PACKAGES = {
+    "awesome": awesome, "berry": berry, "bspwm": bspwm,
+    "budgie-desktop": budgie, "chadwm": chadwm, "cinnamon": cinnamon,
+    "cwm": cwm, "cutefish-xsession": cutefish, "deepin": deepin,
+    "dk": dk, "dusk": dusk, "dwm": dwm, "enlightenment": enlightenment,
+    "fvwm3": fvwm3, "gnome": gnome, "herbstluftwm": hlwm,
+    "hypr": hypr, "hyprland": hyprland, "i3": i3, "icewm": icewm,
+    "jwm": jwm, "leftwm": leftwm, "lxqt": lxqt, "mate": mate,
+    "nimdow": nimdow, "niri": niri, "openbox": openbox,
+    "pantheon": pantheon, "plasma": plasma, "qtile": qtile,
+    "spectrwm": spectrwm, "ukui": ukui, "wayfire": wayfire,
+    "wmderland": wmderland, "worm": worm, "xfce": xfce, "xmonad": xmonad,
+}
+
+def remove_desktop(self, desktop_target: str) -> None:
+    packages = _DESKTOP_PACKAGES.get(desktop_target)
+    if not packages: return
+    for pkg in packages:
+        subprocess.call(["sudo", "pacman", "-Rs", pkg, "--noconfirm", "--ask=4"])
+    for pkg in _CRITICAL_EXTRAS.get(desktop_target, []):
+        subprocess.call(["sudo", "pacman", "-Rdd", pkg, "--noconfirm", "--ask=4"])

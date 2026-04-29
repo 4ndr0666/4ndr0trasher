@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=4ndr0trasher
+GenericName=4ndr0trasher
+X-GNOME-FullName=4ndr0trasher
+Comment=Removes all your desktops - Beware!!!
+Exec=/usr/local/bin/4ndr0trasher
+Icon=4ndr0trasher
+Terminal=false
+Type=Application
+Categories=GTK;Settings;Security;X-GNOME-Settings-Panel;X-GNOME-SystemSettings;X-Unity-Settings-Panel;X-XFCE-SettingsDialog;X-XFCE-SystemSettings;
+Keywords=welcome;tool;4ndr0666os;
+StartupNotify=true

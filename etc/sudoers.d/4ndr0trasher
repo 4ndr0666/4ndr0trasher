@@ -1,0 +1,1 @@
+%wheel ALL=(root) NOPASSWD: /usr/share/4ndr0trasher/4ndr0trasher.py
