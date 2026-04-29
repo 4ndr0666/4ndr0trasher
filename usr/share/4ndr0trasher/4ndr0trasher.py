@@ -127,12 +127,33 @@ switch:checked {
     background: rgba(0, 229, 255, 0.2);
 }
 
-/* --- COMBOBOX / DROPDOWNS --- */
+/* --- COMBOBOX / DROPDOWNS / POPOVERS --- */
 combobox,
 combobox button {
-    background: rgba(10, 19, 26, 0.9);
-    border: 1px solid #00E5FF;
+    background: rgba(10, 19, 26, 0.55);
+    border: 1px solid rgba(0, 229, 255, 0.4);
     color: #00E5FF;
+}
+
+/* Target the spawned dropdown popups for glassmorphism */
+combobox window.popup,
+combobox window.popup menu,
+menu,
+popover {
+    background: rgba(10, 19, 26, 0.65);
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+    color: #00E5FF;
+}
+
+menuitem {
+    color: #00E5FF;
+    padding: 5px;
+}
+
+menuitem:hover {
+    background: rgba(0, 229, 255, 0.2);
+    color: #ffffff;
 }
 
 /* --- SCROLLBARS --- */
