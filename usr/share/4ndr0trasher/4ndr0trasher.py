@@ -5,7 +5,8 @@
 
 import os
 import gi
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf, GLib
 
 import GUI
@@ -223,7 +224,7 @@ class Main(Gtk.Window):
         self.set_titlebar(hb)
 
         # Asset Mapping
-        icon_path = os.path.join(fn.base_dir, 'images/4ndr0666os-icon.png')
+        icon_path = os.path.join(fn.base_dir, "images/4ndr0666os-icon.png")
         if os.path.exists(icon_path):
             self.set_icon_from_file(icon_path)
 
@@ -246,7 +247,7 @@ class Main(Gtk.Window):
         fn.create_log(self)
         fn.make_backups(
             enabled=self.backup_switch.get_active(),
-            surgical=self.surgical_switch.get_active()
+            surgical=self.surgical_switch.get_active(),
         )
         fn.remove_desktop(self, target)
         if not self.donottouch.get_active():
