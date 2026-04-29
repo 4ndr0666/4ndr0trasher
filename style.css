@@ -1,0 +1,72 @@
+/* ---- 💫 3LECTRIC 6LASS: TOTALITARIAN RESET 💫 ---- */
+
+/* Global Palette Reset */
+* {
+    color: #00f2ff !important;
+    font-family: "JetBrains Mono", monospace !important;
+    outline-color: rgba(0, 242, 255, 0.5) !important;
+}
+
+/* Main Window Glassmorphism */
+window.main-window {
+    background-color: rgba(10, 15, 20, 0.95) !important;
+    border: 2px solid #00f2ff !important;
+    box-shadow: 0 0 40px rgba(0, 242, 255, 0.3) !important;
+}
+
+/* 3lectric Neon Buttons */
+button {
+    background: rgba(0, 40, 60, 0.8) !important;
+    border: 1px solid #00f2ff !important;
+    border-radius: 4px !important;
+    padding: 8px 16px !important;
+    text-shadow: 0 0 10px #00f2ff !important;
+    box-shadow: 0 0 10px rgba(0, 242, 255, 0.3) !important;
+    transition: all 150ms ease !important;
+}
+
+button:hover {
+    background-color: rgba(0, 242, 255, 0.3) !important;
+    box-shadow: 0 0 25px #00f2ff, inset 0 0 10px #ffffff !important;
+    color: #ffffff !important;
+}
+
+/* Destructive Actions (Purge Matrix) */
+button.destructive-action {
+    background-color: rgba(40, 0, 10, 0.8) !important;
+    border-color: #ff0055 !important;
+    color: #ff0055 !important;
+    text-shadow: 0 0 10px #ff0055 !important;
+}
+
+button.destructive-action:hover {
+    background-color: rgba(255, 0, 85, 0.4) !important;
+    box-shadow: 0 0 30px #ff0055 !important;
+    color: #ffffff !important;
+}
+
+/* Combobox & Entry Fixes */
+combobox, combobox window, menu, menuitem {
+    background-color: #051015 !important;
+    border: 1px solid #00f2ff !important;
+    color: #00f2ff !important;
+}
+
+/* Switches */
+switch {
+    background-color: #000000 !important;
+    border: 1px solid #00f2ff !important;
+}
+
+switch slider {
+    background-color: #00f2ff !important;
+    box-shadow: 0 0 15px #00f2ff !important;
+}
+
+/* Scrollbars - Sub-atomic Rebranding */
+scrollbar trough {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+scrollbar slider {
+    background-color: #00f2ff !important;
+}

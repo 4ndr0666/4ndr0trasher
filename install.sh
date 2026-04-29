@@ -1,82 +1,100 @@
 #!/usr/bin/env bash
-# File: install.sh
-# Description: Professional installer for 4ndr0trasher Module
-# Architecture: Superset-compliant / Atomic Deployment
+# /* ---- 💫 4NDR0TRASHER: HUD REBRANDING & DEPLOYMENT MATRIX 💫 ---- */
+# Architecture: Statistically pure, offensive POSIX orchestration
+# Version: 1.6.0 (3lectric Glass Edition)
+# ----------------------------------------------------------------------
 
 set -euo pipefail
 IFS=$'\n\t'
 
 SOURCE_DIR="$(cd -- "$(dirname -- "$(readlink -f "${BASH_SOURCE[0]:-$0}")")" && pwd -P)"
 SYS_ROOT="/"
-DRY_RUN=false
+GLYPH_SRC="${SOURCE_DIR}/4ndr0666_glyph.png"
 
-readonly SUDOERS_DROP="/etc/sudoers.d/4ndr0trasher"
-readonly PAYLOAD_PATH="/usr/share/4ndr0trasher/4ndr0trasher.py"
-readonly LOG_DIR="/var/log/4ndr0trasher/logs"
+# Target Definitions
+readonly PKG_SHARE="${SYS_ROOT}usr/share/4ndr0trasher"
+readonly IMG_DIR="${PKG_SHARE}/images"
+readonly ICON_DIR="${SYS_ROOT}usr/share/icons/hicolor/scalable/apps"
 
 log_info()  { printf "\033[1;32m[INFO]\033[0m  %s\n" "$*"; }
 log_error() { printf "\033[1;31m[ERROR]\033[0m %s\n" "$*"; }
-
-cleanup() {
-    if [[ -n "${SUDOERS_TMP:-}" && -f "${SUDOERS_TMP}" ]]; then
-        rm -f "${SUDOERS_TMP}"
-    fi
-}
-trap cleanup EXIT INT TERM
-
-run() {
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        printf "\033[1;34m[DRY-RUN]\033[0m Would run: %s\n" "$*"
-    else
-        printf "\033[1;30m[EXEC]\033[0m %s\n" "$*"
-        "$@"
-    fi
-}
 
 if [[ "${EUID}" -ne 0 ]]; then
     log_error "Execute with sudo."
     exit 1
 fi
 
-log_info "Initializing 4ndr0trasher Deployment..."
-
-# 1. Sync Execution Wrapper
-run mkdir -p "${SYS_ROOT}usr/local/bin"
-run cp -v "${SOURCE_DIR}/usr/local/bin/4ndr0trasher" "${SYS_ROOT}usr/local/bin/"
-run chmod 755 "${SYS_ROOT}usr/local/bin/4ndr0trasher"
-
-# 2. Sync Payload Architecture
-run mkdir -p "${SYS_ROOT}usr/share/4ndr0trasher"
-run rsync -av --exclude '.git/' "${SOURCE_DIR}/usr/share/4ndr0trasher/" "${SYS_ROOT}usr/share/4ndr0trasher/"
-run cp -v "${SOURCE_DIR}/usr/share/applications/4ndr0trasher.desktop" "${SYS_ROOT}usr/share/applications/"
-run cp -v "${SOURCE_DIR}/usr/share/polkit-1/actions/org.4ndr0666os.pkexec.4ndr0trasher.policy" "${SYS_ROOT}usr/share/polkit-1/actions/"
-
-# 3. Create Log Infrastructure
-run mkdir -p "${SYS_ROOT}${LOG_DIR}"
-run chmod 755 "${SYS_ROOT}${LOG_DIR}"
-
-# 4. Enforce Permissions
-run chmod 755 "${SYS_ROOT}${PAYLOAD_PATH}"
-run chmod 644 "${SYS_ROOT}usr/share/4ndr0trasher/Functions.py"
-run chmod 644 "${SYS_ROOT}usr/share/4ndr0trasher/GUI.py"
-
-# 5. Deploy Sudoers Rule
-SUDOERS_TMP="$(mktemp)"
-echo "%wheel ALL=(root) NOPASSWD: ${PAYLOAD_PATH}" > "${SUDOERS_TMP}"
-if visudo -c -f "${SUDOERS_TMP}" &>/dev/null; then
-    install -m 0440 -o root -g root "${SUDOERS_TMP}" "${SUDOERS_DROP}"
-    log_info "Sudoers rule validated."
-else
-    log_error "visudo syntax error."
+# 1. ──────────────── GEOMETRIC ASSET GENERATION ────────────────
+log_info "Verifying geometric lineage: ${GLYPH_SRC}"
+if [[ ! -f "$GLYPH_SRC" ]]; then
+    log_error "Source glyph missing. Execution halted."
     exit 1
 fi
 
-# 6. Update Caches
-if command -v gtk-update-icon-cache &>/dev/null; then
-    run gtk-update-icon-cache -q -t -f "${SYS_ROOT}usr/share/icons/hicolor"
-fi
-if command -v update-desktop-database &>/dev/null; then
-    run update-desktop-database -q "${SYS_ROOT}usr/share/applications"
+# Identify scaling tool
+MAGICK_CMD=$(command -v magick || command -v convert || true)
+if [[ -z "$MAGICK_CMD" ]]; then
+    log_error "ImageMagick not found. Required for asset generation."
+    exit 1
 fi
 
-log_info "4ndr0trasher operational."
+generate_asset() {
+    local out="$1" size="$2"
+    log_info "Scaling -> ${size} | ${out##*/}"
+    mkdir -p "$(dirname "$out")"
+    $MAGICK_CMD "$GLYPH_SRC" -interpolate Nearest -filter point -resize "$size" "$out"
+}
+
+# Generate sized assets into the local tree before sync
+generate_asset "${SOURCE_DIR}/usr/share/4ndr0trasher/images/4ndr0666os-icon.png" "512x512"
+generate_asset "${SOURCE_DIR}/usr/share/4ndr0trasher/images/4ndr0trasher-logo.png" "235x235"
+generate_asset "${SOURCE_DIR}/usr/share/4ndr0trasher/images/4ndr0trasher-logo-bomb.png" "235x235"
+generate_asset "${SOURCE_DIR}/usr/share/4ndr0trasher/images/panel.png" "700x40!"
+generate_asset "${SOURCE_DIR}/usr/share/icons/hicolor/scalable/apps/4ndr0trasher.png" "512x512"
+
+# 2. ──────────────── ATOMIC FILESYSTEM SYNC ────────────────
+log_info "Synchronizing project matrix to ${SYS_ROOT}..."
+
+# Sync usr/local/bin
+mkdir -p "${SYS_ROOT}usr/local/bin"
+cp -v "${SOURCE_DIR}/usr/local/bin/4ndr0trasher" "${SYS_ROOT}usr/local/bin/"
+chmod 755 "${SYS_ROOT}usr/local/bin/4ndr0trasher"
+
+# Sync Payload
+mkdir -p "$PKG_SHARE"
+rsync -av --delete --exclude '.git/' "${SOURCE_DIR}/usr/share/4ndr0trasher/" "$PKG_SHARE/"
+cp -v "${SOURCE_DIR}/style.css" "$PKG_SHARE/" # Ensure style.css is available to python
+
+# Sync XDG integration
+cp -v "${SOURCE_DIR}/usr/share/applications/4ndr0trasher.desktop" "${SYS_ROOT}usr/share/applications/"
+cp -v "${SOURCE_DIR}/usr/share/polkit-1/actions/org.4ndr0666os.pkexec.4ndr0trasher.policy" "${SYS_ROOT}usr/share/polkit-1/actions/"
+cp -v "${SOURCE_DIR}/usr/share/icons/hicolor/scalable/apps/4ndr0trasher.png" "$ICON_DIR/"
+
+# 3. ──────────────── THEME HOTFIX INJECTION ────────────────
+log_info "Applying CSS syntax hotfix to 4ndr0trasher.py..."
+# Replaces 'background-image: none !important;' with 'background: none !important;'
+# to prevent the "Junk at end of value" GTK 3 CSS parser error.
+sed -i 's/background-image: none !important;/background: none !important;/g' "${PKG_SHARE}/4ndr0trasher.py"
+
+# 4. ──────────────── PERMISSIONS & CACHES ────────────────
+log_info "Enforcing permissions matrix..."
+chmod 755 "${PKG_SHARE}/4ndr0trasher.py"
+chmod 644 "${PKG_SHARE}/Functions.py"
+chmod 644 "${PKG_SHARE}/GUI.py"
+chmod 644 "${PKG_SHARE}/style.css"
+
+# Deploy Sudoers Rule
+SUDOERS_TMP="$(mktemp)"
+echo "%wheel ALL=(root) NOPASSWD: ${PKG_SHARE}/4ndr0trasher.py" > "${SUDOERS_TMP}"
+if visudo -c -f "${SUDOERS_TMP}" &>/dev/null; then
+    install -m 0440 -o root -g root "${SUDOERS_TMP}" "/etc/sudoers.d/4ndr0trasher"
+fi
+rm -f "${SUDOERS_TMP}"
+
+# Refresh System Caches
+update-desktop-database -q "${SYS_ROOT}usr/share/applications" || true
+if command -v gtk-update-icon-cache &>/dev/null; then
+    gtk-update-icon-cache -q -t -f "${SYS_ROOT}usr/share/icons/hicolor" || true
+fi
+
+log_info "4ndr0trasher: 3lectric Glass Matrix deployed successfully."
