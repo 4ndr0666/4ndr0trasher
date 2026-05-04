@@ -238,7 +238,9 @@ def make_backups(enabled=True, surgical=True):
                 )
                 permissions(dst)
             except Exception:
-                print(f"[!] Warning: Partial success for {label}. Transient files skipped.")
+                print(
+                    f"[!] Warning: Partial success for {label}. Transient files skipped."
+                )
                 print(traceback.format_exc())
 
 
@@ -343,20 +345,45 @@ xmonad = ["xmonad", "xmonad-contrib"]
 
 # [WAYLAND VANGUARD]: Legacy X11 Purge Vector
 x11_legacy_purge = [
-    "xorg-server", "xorg-xinit", "xorg-xinput", "xorg-x11perf",
-    "xorg-xbacklight", "xorg-xcmsdb", "xorg-xcursorgen",
-    "xorg-xdpyinfo", "xorg-xdriinfo", "xorg-xev", "xorg-xgamma",
-    "xorg-xhost", "xorg-xmodmap", "xorg-xpr", "xorg-xrandr",
-    "xorg-xrdb", "xorg-xrefresh", "xorg-xset", "xorg-xsetroot",
-    "xorg-xvinfo", "xorg-xwd", "xorg-xwininfo", "xorg-xwud",
-    "xcompmgr", "picom", "arandr", "lxrandr"
+    "xorg-server",
+    "xorg-xinit",
+    "xorg-xinput",
+    "xorg-x11perf",
+    "xorg-xbacklight",
+    "xorg-xcmsdb",
+    "xorg-xcursorgen",
+    "xorg-xdpyinfo",
+    "xorg-xdriinfo",
+    "xorg-xev",
+    "xorg-xgamma",
+    "xorg-xhost",
+    "xorg-xmodmap",
+    "xorg-xpr",
+    "xorg-xrandr",
+    "xorg-xrdb",
+    "xorg-xrefresh",
+    "xorg-xset",
+    "xorg-xsetroot",
+    "xorg-xvinfo",
+    "xorg-xwd",
+    "xorg-xwininfo",
+    "xorg-xwud",
+    "xcompmgr",
+    "picom",
+    "arandr",
+    "lxrandr",
 ]
 
 # [WAYLAND VANGUARD]: Wayland Sanctity Locks
 # Absolutely protected packages immune from targeted destruction
 WAYLAND_SANCTITY = [
-    "wayland", "wlroots", "wayland-protocols", "xorg-xwayland", 
-    "dwl", "hyprland", "xwayland-run"
+    "wayland",
+    "wlroots",
+    "wayland-protocols",
+    "xorg-xwayland",
+    "dwl",
+    "hyprland",
+    "xwayland-run",
 ]
 
 _CRITICAL_EXTRAS = {
@@ -406,25 +433,32 @@ _DESKTOP_PACKAGES = {
     "x11-legacy-purge": x11_legacy_purge,
 }
 
+
 def remove_desktop(self, desktop_target: str) -> None:
     packages = _DESKTOP_PACKAGES.get(desktop_target)
     if not packages:
         return
-        
+
     # Enforce Sanctity Locks
     safe_packages = [pkg for pkg in packages if pkg not in WAYLAND_SANCTITY]
-    
+
     print(f"------------------------------------------------------------")
     print(f"TRASHING DESKTOP: {desktop_target}")
     print(f"------------------------------------------------------------")
-    
+
     for pkg in safe_packages:
         print(f"Removing package: {pkg}")
-        subprocess.call(["sudo", "pacman", "-Rs", pkg, "--noconfirm", "--ask=4"], shell=False)
-        
-    safe_criticals = [pkg for pkg in _CRITICAL_EXTRAS.get(desktop_target, []) if pkg not in WAYLAND_SANCTITY]
+        subprocess.call(
+            ["sudo", "pacman", "-Rs", pkg, "--noconfirm", "--ask=4"], shell=False
+        )
+
+    safe_criticals = [
+        pkg
+        for pkg in _CRITICAL_EXTRAS.get(desktop_target, [])
+        if pkg not in WAYLAND_SANCTITY
+    ]
     for pkg in safe_criticals:
         print(f"Removing critical package: {pkg}")
-        subprocess.call(["sudo", "pacman", "-Rdd", pkg, "--noconfirm", "--ask=4"], shell=False)
-
-}
+        subprocess.call(
+            ["sudo", "pacman", "-Rdd", pkg, "--noconfirm", "--ask=4"], shell=False
+        )
