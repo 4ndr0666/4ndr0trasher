@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# /* ---- 💫 4NDR0TRASHER: HUD REBRANDING & DEPLOYMENT MATRIX 💫 ---- */
-# Architecture: Statistically pure, offensive POSIX orchestration
-# Version: 1.6.0 (3lectric Glass Edition)
-# ----------------------------------------------------------------------
-
+# 4ndr0666
 set -euo pipefail
 IFS=$'\n\t'
+#
+#                   💀 4NDR0TRASHER INSTALLER 💀
+# Desc: This file installs the 4ndr0trasher program on a new system.
+# ----------------------------------------------------------------------
 
+# GLOBAL CONSTANTS
 SOURCE_DIR="$(cd -- "$(dirname -- "$(readlink -f "${BASH_SOURCE[0]:-$0}")")" && pwd -P)"
 SYS_ROOT="/"
 GLYPH_SRC="${SOURCE_DIR}/4ndr0666_glyph.png"
@@ -97,4 +98,4 @@ if command -v gtk-update-icon-cache &>/dev/null; then
     gtk-update-icon-cache -q -t -f "${SYS_ROOT}usr/share/icons/hicolor" || true
 fi
 
-log_info "4ndr0trasher: 3lectric Glass Matrix deployed successfully."
+log_info "4ndr0trasher: deployed successfully."
