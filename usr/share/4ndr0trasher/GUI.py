@@ -98,7 +98,9 @@ def GUI(self, Gtk, GdkPixbuf, fn):
 
     # Option 1: Purge Detected Sessions (XSessions/Wayland-Sessions)
     row_inst = Gtk.Box(spacing=10)
-    row_inst.pack_start(Gtk.Label(label="PURGE DETECTED MATRIX:"), False, False, 0)
+    lbl_inst = Gtk.Label(label="OPTION 1: PURGE DETECTED MATRIX")
+    lbl_inst.set_xalign(0)
+    row_inst.pack_start(lbl_inst, False, False, 0)
     self.installed_sessions = Gtk.ComboBoxText()
     fn.pop_box(self, self.installed_sessions)
     self.installed_sessions.set_active(0)
@@ -113,7 +115,9 @@ def GUI(self, Gtk, GdkPixbuf, fn):
 
     # Option 2: Global Registry (Master List Removal)
     row_glob = Gtk.Box(spacing=10)
-    row_glob.pack_start(Gtk.Label(label="PURGE GLOBAL REGISTRY:"), False, False, 0)
+    lbl_glob = Gtk.Label(label="OPTION 2: PURGE GLOBAL REGISTRY")
+    lbl_glob.set_xalign(0)
+    row_glob.pack_start(lbl_glob, False, False, 0)
     self.desktopr = Gtk.ComboBoxText()
     fn.pop_box_all(self, self.desktopr)
     self.desktopr.set_active(0)
@@ -124,6 +128,18 @@ def GUI(self, Gtk, GdkPixbuf, fn):
     btn_glob.connect("clicked", self.on_remove_clicked)
     row_glob.pack_end(btn_glob, False, False, 0)
     action_matrix.pack_start(row_glob, False, False, 0)
+
+    # [WAYLAND VANGUARD]: Option 3: X11 Legacy Purge
+    row_x11 = Gtk.Box(spacing=10)
+    lbl_x11 = Gtk.Label(label="OPTION 3: ASCEND TO WAYLAND (Purge X11/Xorg)")
+    lbl_x11.set_xalign(0)
+    row_x11.pack_start(lbl_x11, True, True, 0)
+
+    btn_x11 = Gtk.Button(label="EXECUTE X11 PURGE")
+    btn_x11.get_style_context().add_class("destructive-action")
+    btn_x11.connect("clicked", self.on_purge_x11_clicked)
+    row_x11.pack_end(btn_x11, False, False, 0)
+    action_matrix.pack_start(row_x11, False, False, 10)
 
     self.vbox.pack_start(action_matrix, False, False, 10)
 

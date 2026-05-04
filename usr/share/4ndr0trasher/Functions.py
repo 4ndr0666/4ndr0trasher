@@ -60,8 +60,8 @@ def get_real_user():
 sudo_username = get_real_user()
 home = "/home/" + str(sudo_username)
 message = (
-    "4ndr0trasher: Provided without guarantees. "
-    "Desktops will be purged. Make backups."
+    "4ndr0trasher: ENVIRONMENT SANITIZER. "
+    "Proceed with extreme prejudice. Ensure backups are enabled."
 )
 
 # =====================================================
@@ -93,6 +93,7 @@ OMIT_LIST = [
     "SingletonCookie",
     "SingletonLock",
     ".cache",
+    ".local/share/Trash",
 ]
 
 # =====================================================
@@ -176,6 +177,8 @@ def pop_box(self, combo):
         "i3-with-shmlog",
         "openbox-kde",
         "cinnamon2d",
+        "dwl",
+        "hyprland",
         "",
     }
     for entry in coms:
@@ -207,6 +210,7 @@ def permissions(dst):
 
 def make_backups(enabled=True, surgical=True):
     if not enabled:
+        print("[INFO] Surgical backup bypassed by operator.")
         return
     backup_root = home + "/.config-4ndr0trasher"
     if not os.path.exists(backup_root):
@@ -223,6 +227,7 @@ def make_backups(enabled=True, surgical=True):
 
     for label, src, dst in targets:
         if os.path.exists(src):
+            print(f"Backing up {label}...")
             try:
                 shutil.copytree(
                     src,
@@ -233,6 +238,7 @@ def make_backups(enabled=True, surgical=True):
                 )
                 permissions(dst)
             except Exception:
+                print(f"[!] Warning: Partial success for {label}. Transient files skipped.")
                 print(traceback.format_exc())
 
 
@@ -254,7 +260,7 @@ def restart_program():
 
 
 # =====================================================
-#                CONTENT OF DESKTOPS
+#                CONTENT OF DESKTOPS & SANITIZATION
 # =====================================================
 
 desktop = [
@@ -335,6 +341,24 @@ worm = ["worm-git", "worm-dev-git"]
 xfce = ["xfce4", "xfce4-goodies"]
 xmonad = ["xmonad", "xmonad-contrib"]
 
+# [WAYLAND VANGUARD]: Legacy X11 Purge Vector
+x11_legacy_purge = [
+    "xorg-server", "xorg-xinit", "xorg-xinput", "xorg-x11perf",
+    "xorg-xbacklight", "xorg-xcmsdb", "xorg-xcursorgen",
+    "xorg-xdpyinfo", "xorg-xdriinfo", "xorg-xev", "xorg-xgamma",
+    "xorg-xhost", "xorg-xmodmap", "xorg-xpr", "xorg-xrandr",
+    "xorg-xrdb", "xorg-xrefresh", "xorg-xset", "xorg-xsetroot",
+    "xorg-xvinfo", "xorg-xwd", "xorg-xwininfo", "xorg-xwud",
+    "xcompmgr", "picom", "arandr", "lxrandr"
+]
+
+# [WAYLAND VANGUARD]: Wayland Sanctity Locks
+# Absolutely protected packages immune from targeted destruction
+WAYLAND_SANCTITY = [
+    "wayland", "wlroots", "wayland-protocols", "xorg-xwayland", 
+    "dwl", "hyprland", "xwayland-run"
+]
+
 _CRITICAL_EXTRAS = {
     "budgie-desktop": ["gnome", "gnome-desktop", "gnome-online-accounts"],
     "gnome": ["gnome", "gnome-desktop", "gnome-online-accounts"],
@@ -379,14 +403,28 @@ _DESKTOP_PACKAGES = {
     "worm": worm,
     "xfce": xfce,
     "xmonad": xmonad,
+    "x11-legacy-purge": x11_legacy_purge,
 }
-
 
 def remove_desktop(self, desktop_target: str) -> None:
     packages = _DESKTOP_PACKAGES.get(desktop_target)
     if not packages:
         return
-    for pkg in packages:
-        subprocess.call(["sudo", "pacman", "-Rs", pkg, "--noconfirm", "--ask=4"])
-    for pkg in _CRITICAL_EXTRAS.get(desktop_target, []):
-        subprocess.call(["sudo", "pacman", "-Rdd", pkg, "--noconfirm", "--ask=4"])
+        
+    # Enforce Sanctity Locks
+    safe_packages = [pkg for pkg in packages if pkg not in WAYLAND_SANCTITY]
+    
+    print(f"------------------------------------------------------------")
+    print(f"TRASHING DESKTOP: {desktop_target}")
+    print(f"------------------------------------------------------------")
+    
+    for pkg in safe_packages:
+        print(f"Removing package: {pkg}")
+        subprocess.call(["sudo", "pacman", "-Rs", pkg, "--noconfirm", "--ask=4"], shell=False)
+        
+    safe_criticals = [pkg for pkg in _CRITICAL_EXTRAS.get(desktop_target, []) if pkg not in WAYLAND_SANCTITY]
+    for pkg in safe_criticals:
+        print(f"Removing critical package: {pkg}")
+        subprocess.call(["sudo", "pacman", "-Rdd", pkg, "--noconfirm", "--ask=4"], shell=False)
+
+}

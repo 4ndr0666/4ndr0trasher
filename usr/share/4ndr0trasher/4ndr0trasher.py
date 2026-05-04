@@ -213,14 +213,14 @@ class Main(Gtk.Window):
             screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
         )
 
-        self.set_default_size(800, 550)
+        self.set_default_size(800, 580)
         self.get_style_context().add_class("main-window")
 
         # --- PHASE 3: TITLEBAR HUD ---
         hb = Gtk.HeaderBar()
         hb.set_show_close_button(True)
         hb.set_title("4NDR0TRASHER // ENVIRONMENTAL PURGE")
-        hb.set_subtitle("MATRIX STATE: ARMED")
+        hb.set_subtitle("WAYLAND VANGUARD: ARMED")
         self.set_titlebar(hb)
 
         # Asset Mapping
@@ -261,6 +261,9 @@ class Main(Gtk.Window):
 
     def on_remove_clicked(self, widget):
         self.execute_purge(self.desktopr.get_active_text())
+
+    def on_purge_x11_clicked(self, widget):
+        self.execute_purge("x11-legacy-purge")
 
     def on_reboot_clicked(self, widget):
         fn.shutdown()
