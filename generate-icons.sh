@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# /* ---- 💫 4NDR0TRASHER ASSET REBRANDING MATRIX 💫 ---- */
-# Target: Production-ready 4ndr0666os filesystem alignment
-# Architecture: Atomic Scaling + Legacy Purge + EAFP Validation
-# ----------------------------------------------------------------------
-
+# 4ndr0666
 set -euo pipefail
+#
+#                     💀 === GENERATE-ICONS.SH === 💀
+# Desc: This file generates the icons for the 4ndr0trasher program using the 
+# supplied psi glyph and env paths below.
+# ------------------------------------------------------------
 
-# CORE DIRECTIVE 5: EAFP Imperative
+# GLOBAL CONSTANTS
 SOURCE_GLYPH="4ndr0666_glyph.png"
 if [[ ! -f "$SOURCE_GLYPH" ]]; then
     echo "[ERROR] Source glyph ($SOURCE_GLYPH) not found in CWD. Execution halted."
@@ -82,10 +83,6 @@ find "$IMG_DIR" -type f -name "*arcolinux*" -delete
 
 # Purge legacy SVG from scalable apps
 find "$ICON_DIR" -type f -name "*arcolinux*" -delete
-
-# ──────────────────────────────────────────────────────────────────────────────
-# 4. FINAL VALIDATION
-# ──────────────────────────────────────────────────────────────────────────────
 
 echo "---------------------------------------------------------------------------"
 echo "[SUCCESS] Rebranding Matrix Complete."
